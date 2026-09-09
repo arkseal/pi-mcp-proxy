@@ -1,0 +1,30 @@
+{
+  "name": "pi-mcp-proxy",
+  "version": "1.0.0",
+  "description": "Namespace proxy and output guard for MCP tools preventing context window bloat in Pi",
+  "type": "module",
+  "main": "./src/index.ts",
+  "keywords": [
+    "pi-package",
+    "pi",
+    "coding-agent",
+    "mcp",
+    "model-context-protocol",
+    "proxy",
+    "token-optimization"
+  ],
+  "author": "arkseal",
+  "license": "MIT",
+  "scripts": {
+    "test": "bun test tests/**/*.test.ts"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": ">=0.74.0",
+    "typebox": "*"
+  },
+  "pi": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  }
+}
