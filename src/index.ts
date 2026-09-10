@@ -1,4 +1,5 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { Text } from "@earendil-works/pi-tui";
 import { Type } from "typebox";
 import { McpRouter } from "./router.js";
 import { guardMcpOutput } from "./output-guard.js";
@@ -28,6 +29,17 @@ export default function mcpProxyExtension(pi: ExtensionAPI) {
       },
       { additionalProperties: false }
     ),
+    renderCall(args: any, theme: any, context: any) {
+      const text = (context.lastComponent as Text | undefined) ?? new Text("", 0, 0);
+      let content = theme.fg("toolTitle", theme.bold("mcp_call "));
+      if (args?.server && args?.tool) {
+        content += theme.fg("accent", `${args.server}:${args.tool}`);
+      } else if (args?.tool) {
+        content += theme.fg("accent", args?.tool ?? "");
+      }
+      text.setText(content);
+      return text;
+    },
     async execute(_toolCallId, params) {
       try {
         const raw = await globalRouter.callTool(params.server, params.tool, params.args ?? {});
@@ -66,6 +78,17 @@ export default function mcpProxyExtension(pi: ExtensionAPI) {
       },
       { additionalProperties: false }
     ),
+    renderCall(args: any, theme: any, context: any) {
+      const text = (context.lastComponent as Text | undefined) ?? new Text("", 0, 0);
+      let content = theme.fg("toolTitle", theme.bold("mcp_list "));
+      if (args?.server) {
+        content += theme.fg("accent", args.server);
+      } else {
+        content += theme.fg("dim", "(all servers)");
+      }
+      text.setText(content);
+      return text;
+    },
     async execute(_toolCallId, params) {
       const listing = globalRouter.listTools(params.server);
       return {
