@@ -1,5 +1,5 @@
 import type { McpServerConfig } from "./config.js";
-import { saveServerEnabled } from "./config.js";
+import { saveServerEnabled, getConfigMtime, loadMcpConfig } from "./config.js";
 import { StdioMcpClient, type McpTool } from "./client.js";
 
 export interface ToolMetadata {
@@ -22,6 +22,27 @@ interface ServerEntry {
 
 export class McpRouter {
   private servers = new Map<string, ServerEntry>();
+  private lastConfigMtime = 0;
+
+  async ensureFreshConfig(): Promise<void> {
+    const mtime = getConfigMtime();
+    if (mtime > this.lastConfigMtime) {
+      this.lastConfigMtime = mtime;
+      const { servers } = await loadMcpConfig();
+      // Keep purely custom/mock registrations, update stdio servers
+      for (const [name, entry] of this.servers.entries()) {
+        if (entry.client) {
+          entry.client.close();
+          this.servers.delete(name);
+        }
+      }
+      for (const [name, cfg] of Object.entries(servers)) {
+        if (!this.servers.has(name)) {
+          this.registerStdioServer(name, cfg);
+        }
+      }
+    }
+  }
 
   registerServer(name: string, registration: McpServerRegistration, enabled = true): void {
     this.servers.set(name, {
@@ -134,6 +155,7 @@ export class McpRouter {
   }
 
   async listToolsAsync(targetServer?: string): Promise<string> {
+    await this.ensureFreshConfig();
     if (this.servers.size === 0) {
       return "No MCP servers currently configured.";
     }
@@ -173,6 +195,7 @@ export class McpRouter {
   }
 
   async callTool(server: string, tool: string, args: Record<string, any>): Promise<any> {
+    await this.ensureFreshConfig();
     const srv = this.servers.get(server);
     if (!srv) {
       const available = Array.from(this.servers.keys()).join(", ") || "none";

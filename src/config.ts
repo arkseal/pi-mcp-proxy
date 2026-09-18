@@ -33,6 +33,16 @@ export function findActiveConfigPath(): string | null {
   return null;
 }
 
+export function getConfigMtime(): number {
+  const cfgPath = findActiveConfigPath();
+  if (!cfgPath) return 0;
+  try {
+    return fsSync.statSync(cfgPath).mtimeMs;
+  } catch {
+    return 0;
+  }
+}
+
 export function getDefaultConfigPath(): string {
   return path.join(os.homedir(), ".config", "mcp", "mcp.json");
 }
